@@ -1,0 +1,44 @@
+def get_peak_valley2(arr, threshold=3, window_size=None, overlap=0.5, req_angles=1, bidirectional=False):
+    if window_size is None:
+        window_size = int(round(len(arr) / 10))
+
+    window_size = int(round(window_size))
+
+    ind = 0
+    peak_inds, valley_inds = [], []
+
+    while ind + window_size <= len(arr):
+        flattened = detrend(arr[ind:ind + window_size])
+        std = np.std(flattened)
+        avg = np.mean(flattened)
+        for idx, val in enumerate(flattened):
+            if val < avg - std * threshold:
+                valley_inds.append(idx + ind)
+            elif val > avg + std * threshold:
+                peak_inds.append(idx + ind)
+        ind += int(window_size * overlap)
+
+    if bidirectional:
+        ind = len(arr) - window_size
+        while ind >= 0:
+            flattened = detrend(arr[ind:ind + window_size])
+            std = np.std(flattened)
+            avg = np.mean(flattened)
+            for idx, val in enumerate(flattened):
+                if val < avg - std * threshold:
+                    valley_inds.append(idx + ind)
+                elif val > avg + std * threshold:
+                    peak_inds.append(idx + ind)
+            ind -= int(window_size * overlap)
+
+    peak_counts = Counter(peak_inds)
+    pk_inds = []
+    for c in peak_counts.keys():
+        if peak_counts[c] >= req_angles:
+            pk_inds.append(c)
+
+    valley_counts = Counter(valley_inds)
+    vly_inds = []
+    for c in valley_counts.keys():
+        if valley_counts[c] >= req_angles:
+            vly_inds.append(c)
