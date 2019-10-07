@@ -1,44 +1,90 @@
-def get_peak_valley2(arr, threshold=3, window_size=None, overlap=0.5, req_angles=1, bidirectional=False):
-    if window_size is None:
-        window_size = int(round(len(arr) / 10))
+def get_peak_valley(arr, threshold, window_size, overlap, req_angles):
 
+    #Note: Because of the nature of this method, and for the purposes of integrity, data points before window_length and after (len(arr) - window_length) * 2 should not beconsidered as potential pak/valley candidates.
+
+    #threshold: the amount of standard deviations for a point to be considered a peak/valley
+    #window_size: size of chunks to break the signal down into. smaller chunks are better for more non-staionary signals
+    #overlap: the percentage of shared data point from one window to the next
+    #req_angles: the number of windows a point needs to be detected as a peak/valley in
+    
+    # validate params
     window_size = int(round(window_size))
+    req_angles = int(round(req_angles))
+    window_step = int(round(window_size * (1 - overlap)))
+    if window_step == 0:
+        window_step = 1
+    if req_angles == 0:
+        req_angles = 1
 
+    # get all points that classify as a peak/valley
     ind = 0
     peak_inds, valley_inds = [], []
 
     while ind + window_size <= len(arr):
         flattened = detrend(arr[ind:ind + window_size])
-        std = np.std(flattened)
-        avg = np.mean(flattened)
+        std, avg = np.std(flattened), np.mean(flattened)
+        lower_b = avg - std * threshold
+        upper_b = avg + std * threshold
         for idx, val in enumerate(flattened):
-            if val < avg - std * threshold:
+            if val < lower_b:
                 valley_inds.append(idx + ind)
-            elif val > avg + std * threshold:
+            elif val > upper_b:
                 peak_inds.append(idx + ind)
-        ind += int(window_size * overlap)
+        ind += window_step
 
-    if bidirectional:
-        ind = len(arr) - window_size
-        while ind >= 0:
-            flattened = detrend(arr[ind:ind + window_size])
-            std = np.std(flattened)
-            avg = np.mean(flattened)
-            for idx, val in enumerate(flattened):
-                if val < avg - std * threshold:
-                    valley_inds.append(idx + ind)
-                elif val > avg + std * threshold:
-                    peak_inds.append(idx + ind)
-            ind -= int(window_size * overlap)
-
+    # discard points that have counts below the threshold
     peak_counts = Counter(peak_inds)
-    pk_inds = []
-    for c in peak_counts.keys():
-        if peak_counts[c] >= req_angles:
-            pk_inds.append(c)
+    pk_inds = [c for c in peak_counts.keys() if peak_counts[c] >= req_angles]
 
     valley_counts = Counter(valley_inds)
-    vly_inds = []
-    for c in valley_counts.keys():
-        if valley_counts[c] >= req_angles:
-            vly_inds.append(c)
+    vly_inds = [c for c in valley_counts.keys() if valley_counts[c] >= req_angles]
+
+    # initialize iterator to find to best peak/valley for consecutive detections
+    if len(pk_inds) == 0 or len(vly_inds) == 0:
+        return pk_inds, vly_inds
+
+    if pk_inds[0] < vly_inds[0]:
+        curr_event = 'peak'
+        best_price = close_prices[pk_inds[0]]
+    else:
+        curr_event = 'valley'
+        best_price = close_prices[vly_inds[0]]
+
+    #iterate through points and only carry forward the index that has the highest or lowest value from the current group
+    best_ind, new_vly_inds, new_pk_inds = 0, [], []
+
+    event_inds = pk_inds + vly_inds
+    event_inds = sorted(event_inds)
+
+    for x in event_inds:
+        if x in pk_inds:
+            is_peak = True
+        else:
+            is_peak = False
+
+        if is_peak and curr_event == 'valley':
+            new_vly_inds.append(best_ind)
+            curr_event = 'peak'
+            best_price = close_prices[x]
+            best_ind = x
+            continue
+        if not is_peak and curr_event == 'peak':
+            new_pk_inds.append(best_ind)
+            curr_event = 'valley'
+            best_price = close_prices[x]
+            best_ind = x
+            continue
+
+        if is_peak and curr_event == 'peak' and close_prices[x] > best_price:
+            best_price = close_prices[x]
+            best_ind = x
+        elif not is_peak and curr_event == 'valley' and close_prices[x] < best_price:
+            best_price = close_prices[x]
+            best_ind = x
+
+    if curr_event == 'valley':
+        new_vly_inds.append(best_ind)
+    if curr_event == 'peak':
+        new_pk_inds.append(best_ind)
+
+return new_pk_inds, new_vly_inds
