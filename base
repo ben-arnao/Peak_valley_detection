@@ -1,13 +1,17 @@
 def get_peak_valley(arr, threshold, window_size, overlap, req_angles):
 
-    #Note: Because of the nature of this method, and for the purposes of integrity, data points before window_length and after (len(arr) - window_length) * 2 should not beconsidered as potential pak/valley candidates.
+    #Note: Because of the nature of this method, and for the purposes of integrity, data points before window_length and after (len(arr) - window_length) * 2 should not be considered as potential pak/valley candidates.
 
     #threshold: the amount of standard deviations for a point to be considered a peak/valley
     #window_size: size of chunks to break the signal down into. smaller chunks are better for more non-staionary signals
+    #-- possiby want to come up with a method to make windowsize adaptable
+    
+    
     #overlap: the percentage of shared data point from one window to the next
     #req_angles: the number of windows a point needs to be detected as a peak/valley in
+    #-- add a parameter for forward/bidirectional detection
     
-    #The method i believe gives you two-way peak detection as opposed to moving average methods which might now. Through overlap and requiring that a peak be deteced in multiple windows, this allows you to fine tune whether certain types of peaks should be detected.
+    #The method i believe gives you two-way peak detection as opposed to moving average methods which might not. Through overlap and requiring that a peak be deteced in multiple windows, this allows you to fine tune whether certain types of peaks should be detected.
     
     # validate params
     window_size = int(round(window_size))
