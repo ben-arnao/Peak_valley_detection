@@ -16,6 +16,7 @@ def get_peak_valley(arr, threshold, window_size, overlap, req_angles):
     #The method i believe gives you two-way peak detection as opposed to moving average methods which might not. Through overlap and requiring that a peak be deteced in multiple windows, this allows you to fine tune whether certain types of peaks should be detected.
     
     # validate params
+    #-- better validation
     window_size = int(round(window_size))
     req_angles = int(round(req_angles))
     window_step = int(round(window_size * (1 - overlap)))
