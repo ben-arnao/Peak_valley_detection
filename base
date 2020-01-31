@@ -4,6 +4,8 @@ def get_peak_valley(arr, threshold, window_size, overlap, req_angles):
     #-- better way to handle this?
 
     #threshold: the amount of standard deviations for a point to be considered a peak/valley
+    #-- add option to make % above mean as well as std.
+    
     #window_size: size of chunks to break the signal down into. smaller chunks are better for more non-staionary signals
     #-- possiby want to come up with a method to make windowsize adaptable
     
