@@ -1,6 +1,7 @@
 def get_peak_valley(arr, threshold, window_size, overlap, req_angles):
 
     #Note: Because of the nature of this method, and for the purposes of integrity, data points before window_length and after (len(arr) - window_length) * 2 should not be considered as potential pak/valley candidates.
+    #-- better way to handle this?
 
     #threshold: the amount of standard deviations for a point to be considered a peak/valley
     #window_size: size of chunks to break the signal down into. smaller chunks are better for more non-staionary signals
