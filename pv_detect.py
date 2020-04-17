@@ -2,19 +2,19 @@ import numpy as np
 from enum import Enum
 
 
-def exp_weighted_avg(prices, com, min_periods=100):
+def exp_weighted_avg(signal, com, min_periods=100):
     return np.array(
-        pd.DataFrame(prices).ewm(
+        pd.DataFrame(signal).ewm(
             com=com,
             min_periods=min_periods).mean().values.flatten(),
         dtype=np.float32)
 
 
-def get_pv(prices, com, beta, min_periods=100):
+def get_pv(signal, com, beta, min_periods=100):
     forward_ma = np.flip(np.array(exp_weighted_avg(np.flip(prices), com)))
     # just need to trim prices, since it is what we are iterating over
-    prices = prices[:-min_periods]
-    all_peaks, all_valleys = get_all_pv_indexes(prices, forward_ma, beta)
+    signal = signal[:-min_periods]
+    all_peaks, all_valleys = get_all_pv_indexes(signal, forward_ma, beta)
     condensed_peaks, condensed_valleys = consdense_events(prices, all_peaks, all_valleys)
     return condensed_peaks, condensed_valleys
 
