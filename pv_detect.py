@@ -1,8 +1,24 @@
 import numpy as np
 from enum import Enum
+import pandas as pd
 
 
-def exp_weighted_avg(signal, com, min_periods=100):
+def get_event_indexes(signal, com, beta, min_periods):
+    forward_ma = np.flip(np.array(exp_weighted_avg(np.flip(signal), com, min_periods)))
+    forward_peaks, forward_valleys = get_all_indexes_above_threshold(signal[:-min_periods], forward_ma, beta)
+
+    backward_ma = np.array(exp_weighted_avg(signal, com, min_periods))
+    backward_peaks, backward_valleys = get_all_indexes_above_threshold(signal[min_periods:], backward_ma, beta)
+
+    all_peaks = forward_peaks + backward_peaks
+    all_valleys = forward_valleys + backward_valleys
+
+    condensed_peaks, condensed_valleys = consdense_events(signal, all_peaks, all_valleys)
+
+    return condensed_peaks, condensed_valleys
+
+
+def exp_weighted_avg(signal, com, min_periods):
     return np.array(
         pd.DataFrame(signal).ewm(
             com=com,
@@ -10,20 +26,11 @@ def exp_weighted_avg(signal, com, min_periods=100):
         dtype=np.float32)
 
 
-def get_pv(signal, com, beta, min_periods=100):
-    forward_ma = np.flip(np.array(exp_weighted_avg(np.flip(prices), com)))
-    # just need to trim prices, since it is what we are iterating over
-    signal = signal[:-min_periods]
-    all_peaks, all_valleys = get_all_pv_indexes(signal, forward_ma, beta)
-    condensed_peaks, condensed_valleys = consdense_events(prices, all_peaks, all_valleys)
-    return condensed_peaks, condensed_valleys
-
-
-def get_all_pv_indexes(prices, forward_ma, beta):
+def get_all_indexes_above_threshold(signal, moving_average, beta):
     all_peaks = []
     all_valleys = []
-    for idx, price in enumerate(prices):
-        diff = price / forward_ma[idx] - 1
+    for idx, price in enumerate(signal):
+        diff = price / moving_average[idx] - 1
         if diff > beta:
             all_peaks.append(idx)
         elif diff < -beta:
@@ -31,7 +38,7 @@ def get_all_pv_indexes(prices, forward_ma, beta):
     return all_peaks, all_valleys
 
 
-def consdense_events(prices, all_peaks, all_valleys):
+def consdense_events(signal, all_peaks, all_valleys):
     class Env(Enum):
         PEAK = 1
         VALLEY = 2
@@ -41,7 +48,7 @@ def consdense_events(prices, all_peaks, all_valleys):
     best_peaks = []
     best_valleys = []
 
-    for idx, price in enumerate(prices):
+    for idx, price in enumerate(signal):
         if mode is None:
             if idx in all_peaks:
                 mode = Env.PEAK
