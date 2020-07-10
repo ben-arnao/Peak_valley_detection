@@ -29,8 +29,8 @@ def exp_weighted_avg(signal, com, min_periods):
 def get_all_indexes_above_threshold(signal, moving_average, beta):
     all_peaks = []
     all_valleys = []
-    for idx, price in enumerate(signal):
-        diff = price / moving_average[idx] - 1
+    for idx, val in enumerate(signal):
+        diff = val / moving_average[idx] - 1
         if diff > beta:
             all_peaks.append(idx)
         elif diff < -beta:
@@ -48,14 +48,14 @@ def consdense_events(signal, all_peaks, all_valleys):
     best_peaks = []
     best_valleys = []
 
-    for idx, price in enumerate(signal):
+    for idx, val in enumerate(signal):
         if mode is None:
             if idx in all_peaks:
                 mode = Env.PEAK
-                best_event = (idx, price)
+                best_event = (idx, val)
             elif idx in all_valleys:
                 mode = Env.VALLEY
-                best_event = (idx, price)
+                best_event = (idx, val)
             else:
                 continue
 
@@ -70,20 +70,20 @@ def consdense_events(signal, all_peaks, all_valleys):
             del all_valleys[0]
 
         if mode == Env.PEAK and is_peak:
-            if price > best_event[1]:
-                best_event = (idx, price)
+            if val > best_event[1]:
+                best_event = (idx, val)
 
         elif mode == Env.VALLEY and is_valley:
-            if price < best_event[1]:
-                best_event = (idx, price)
+            if val < best_event[1]:
+                best_event = (idx, val)
 
         elif mode == Env.PEAK and is_valley:
             best_peaks.append(best_event[0])
             mode = Env.VALLEY
-            best_event = (idx, price)
+            best_event = (idx, val)
 
         elif mode == Env.VALLEY and is_peak:
             best_valleys.append(best_event[0])
             mode = Env.PEAK
-            best_event = (idx, price)
+            best_event = (idx, val)
     return best_peaks, best_valleys
