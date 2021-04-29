@@ -6,16 +6,16 @@ import pandas as pd
 
 # 'com' is the factor that determines the time horizon for the exp moving avg
 
-# 'beta' is the threshold a value has to exceed to be marked as a peak/valley
+# 'beta' is the threshold the signal has to exceed to be marked as a peak/valley
 
 # 'min_periods' is used for ensuring the integrity of the exp moving average in the beginning data points by
-# not assigning a value to them, instead of just assigning an incomplete value
+# not assigning a value to them, instead of just assigning a mostly incomplete value
 
 # 'condense_events' is used for only taking the most extreme event from a group of consecutive events
 
 # 'backwards' computes outliers for both directions. With backwards disabled, 
-# a value will only be marked if there is a change of value prior to the current step.
-# For example, if the value plateaus and then drops off, this will not be marked as a peak.
+# a value will only be marked if there is a change of value *prior* to the current step.
+# For example, if the signal plateaus and then drops off, the point of drop off will not be marked as a peak.
 
 
 def get_event_indexes(signal, com, beta, min_periods, condense_events=True, backwards=True):
