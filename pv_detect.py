@@ -2,20 +2,41 @@ import numpy as np
 from enum import Enum
 import pandas as pd
 
+# 'signal' is an array of floats
 
-def get_event_indexes(signal, com, beta, min_periods):
+# 'com' is the factor that determines the time horizon for the exp moving avg
+
+# 'beta' is the threshold a value has to exceed to be marked as a peak/valley
+
+# 'min_periods' is used for ensuring the integrity of the exp moving average in the beginning data points by
+# not assigning a value to them, instead of just assigning an incomplete value
+
+# 'condense_events' is used for only taking the most extreme event from a group of consecutive events
+
+# 'backwards' computes outliers for both directions. With backwards disabled, 
+# a value will only be marked if there is a change of value prior to the current step.
+# For example, if the value plateaus and then drops off, this will not be marked as a peak.
+
+
+def get_event_indexes(signal, com, beta, min_periods, condense_events=True, backwards=True):
     forward_ma = np.flip(np.array(exp_weighted_avg(np.flip(signal), com, min_periods)))
     forward_peaks, forward_valleys = get_all_indexes_above_threshold(signal[:-min_periods], forward_ma, beta)
-
-    backward_ma = np.array(exp_weighted_avg(signal, com, min_periods))
-    backward_peaks, backward_valleys = get_all_indexes_above_threshold(signal[min_periods:], backward_ma, beta)
-
-    all_peaks = forward_peaks + backward_peaks
-    all_valleys = forward_valleys + backward_valleys
-
-    condensed_peaks, condensed_valleys = consdense_events(signal, all_peaks, all_valleys)
-
-    return condensed_peaks, condensed_valleys
+    
+    if backwards:
+        backward_ma = np.array(exp_weighted_avg(signal, com, min_periods))
+        backward_peaks, backward_valleys = get_all_indexes_above_threshold(signal[min_periods:], backward_ma, beta)
+    
+        all_peaks = forward_peaks + backward_peaks
+        all_valleys = forward_valleys + backward_valleys
+    else:
+        all_peaks = forward_peaks
+        all_valleys = forward_valleys
+    
+    if condense_events:
+        condensed_peaks, condensed_valleys = consdense_events(signal, all_peaks, all_valleys)
+        return condensed_peaks, condensed_valleys
+    else:
+        return all_peaks, all_valleys
 
 
 def exp_weighted_avg(signal, com, min_periods):
