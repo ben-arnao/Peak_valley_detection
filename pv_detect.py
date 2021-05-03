@@ -5,6 +5,7 @@ import pandas as pd
 # 'signal' is an array of floats
 
 # 'com' is the factor that determines the time horizon for the exp moving avg
+# see https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.ewm.html for more info
 
 # 'beta' is the threshold the signal has to exceed to be marked as a peak/valley
 
