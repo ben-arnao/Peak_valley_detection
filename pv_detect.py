@@ -10,7 +10,7 @@ import pandas as pd
 # 'beta' is the threshold the signal has to exceed to be marked as a peak/valley
 
 # 'min_periods' is used for ensuring the integrity of the exp moving average in the beginning data points by
-# not assigning a value to them, instead of just assigning a mostly incomplete value
+# not assigning a value to them, instead of just assigning an incomplete value
 
 # 'condense_events' is used for only taking the most extreme event from a group of consecutive events
 
