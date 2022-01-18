@@ -12,7 +12,7 @@ import pandas as pd
 # 'min_periods' is used for ensuring the integrity of the exp moving average in the beginning data points by
 # not assigning a value to them, instead of just assigning an incomplete value
 
-# 'condense_events' is used for only taking the most extreme event from a group of consecutive events
+# 'condense_events' is used for only taking the most extreme event from a group of consecutive same type events
 
 # 'backwards' computes outliers for both directions. With backwards disabled, 
 # a value will only be marked if there is a change of value *prior* to the current step.
