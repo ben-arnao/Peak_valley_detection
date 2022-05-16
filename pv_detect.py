@@ -2,6 +2,7 @@ import numpy as np
 from enum import Enum
 import pandas as pd
 
+
 # 'signal' is an array of floats
 
 # 'com' is the factor that determines the time horizon for the exp moving avg
@@ -12,35 +13,35 @@ import pandas as pd
 # 'min_periods' is used for ensuring the integrity of the exp moving average in the beginning data points by
 # not assigning a value to them, instead of just assigning an incomplete value
 
-# 'condense_events' is used for only taking the most extreme event from a group of consecutive same type events
+# 'condense_events' is used for only taking the most extreme event from a group of consecutive event of the same class
 
-# 'backwards' computes outliers for both directions. With backwards disabled, 
+# 'backwards' computes outliers for both directions. With backwards disabled,
 # a value will only be marked if there is a change of value *prior* to the current step.
 # For example, if the signal plateaus and then drops off, the point of drop off will not be marked as a peak.
 
-
+# returns two arrays representing peak and valley indexes, respectively
 def get_event_indexes(signal, com, beta, min_periods, condense_events=True, backwards=True):
-    forward_ma = np.flip(np.array(exp_weighted_avg(np.flip(signal), com, min_periods)))
-    forward_peaks, forward_valleys = get_all_indexes_above_threshold(signal[:-min_periods], forward_ma, beta)
-    
+    forward_ma = np.flip(np.array(_exp_weighted_avg(np.flip(signal), com, min_periods)))
+    forward_peaks, forward_valleys = _get_all_indexes_above_threshold(signal[:-min_periods], forward_ma, beta)
+
     if backwards:
-        backward_ma = np.array(exp_weighted_avg(signal, com, min_periods))
-        backward_peaks, backward_valleys = get_all_indexes_above_threshold(signal[min_periods:], backward_ma, beta)
-    
+        backward_ma = np.array(_exp_weighted_avg(signal, com, min_periods))
+        backward_peaks, backward_valleys = _get_all_indexes_above_threshold(signal[min_periods:], backward_ma, beta)
+
         all_peaks = forward_peaks + backward_peaks
         all_valleys = forward_valleys + backward_valleys
     else:
         all_peaks = forward_peaks
         all_valleys = forward_valleys
-    
+
     if condense_events:
-        condensed_peaks, condensed_valleys = consdense_events(signal, all_peaks, all_valleys)
+        condensed_peaks, condensed_valleys = _consdense_events(signal, all_peaks, all_valleys)
         return condensed_peaks, condensed_valleys
     else:
         return all_peaks, all_valleys
 
 
-def exp_weighted_avg(signal, com, min_periods):
+def _exp_weighted_avg(signal, com, min_periods):
     return np.array(
         pd.DataFrame(signal).ewm(
             com=com,
@@ -48,7 +49,7 @@ def exp_weighted_avg(signal, com, min_periods):
         dtype=np.float32)
 
 
-def get_all_indexes_above_threshold(signal, moving_average, beta):
+def _get_all_indexes_above_threshold(signal, moving_average, beta):
     all_peaks = []
     all_valleys = []
     for idx, val in enumerate(signal):
@@ -60,7 +61,7 @@ def get_all_indexes_above_threshold(signal, moving_average, beta):
     return all_peaks, all_valleys
 
 
-def consdense_events(signal, all_peaks, all_valleys):
+def _consdense_events(signal, all_peaks, all_valleys):
     class Env(Enum):
         PEAK = 1
         VALLEY = 2
